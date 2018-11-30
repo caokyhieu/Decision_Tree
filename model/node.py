@@ -2,13 +2,14 @@ import numpy as np
 import pandas as pd
 
 class Node:
-	def __init__(self,index,classes,label,attribute=None,valueNames=None):
+	def __init__(self,index,classes,label,depth=0,attribute=None):
 		self.feature = attribute
-		self.values = valueNames
 		self.index = index
 		self.classes = classes
 		self.valueNode = {}
+		self.depth = depth
 		
-	def subnode(self,value,index,classes,label):
-		self.valueNode[value] = Node(index,classes,label)
-		return  self.valueNode[value]
+		self.error_rate = 1
+		
+	def add_child(self, node,value):
+		self.valueNode[value] = node

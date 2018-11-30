@@ -1,21 +1,44 @@
 import numpy as np
 import pandas as pd
-import node
+from .node import *
+import sys
+sys.path.append('./utils')
+from function import *
 
+
+## Data input in the form of dataframe
 class Tree:
 	
-	def __init__(self,data,classes,label):
+	def __init__(self,data,classes,label,max_depth):
 		self.head = Node(data.index,classes,label)
 		self.leaves = [self.head]
-		self.time_branch = 0
+		self.max_depth = max_depth
 		
 	
 	def branch(self,leaf,data,label,attr): 
 		leaf.feature = attr
-		leaf.values = set(data.iloc[leaf.index][leaf.feature])
 		indexes = data.iloc[leaf.index].groupby([leaf.feature]).groups
 		for name, index in indexes.items():
-			classes = list(data.iloc[index][label].unique())
-			self.leaves.append(leaf.subnode(name,index,classes,label))
+			classes = dict(data.iloc[index][label].value_counts())
+			if len(classes) > 0:
+				node = Node(index,classes,label,depth=leaf.depth+1)
+				leaf.add_child(node,name)
+				self.leaves.append(node)
 		self.leaves.remove(leaf)
-		self.time_branch +=1
+		
+	
+	def predict(self,data):
+		predict = []
+		for i in data.index:
+			start = self.head
+			while start.feature!=None:
+				val = data.loc[i][start.feature]
+				if val in start.valueNode.keys():
+					start = start.valueNode[val]
+				else:
+					break
+			predict.append(best_feature(start.classes))
+		return np.array(predict)
+	
+	def calc_accuracy(self,predict,label):
+		return (sum(label==predict)/len(label))
